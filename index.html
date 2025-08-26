@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة مزرعة الدواجن</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .controls {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .control-group label {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        select, input, button {
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        select:focus, input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.3);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+        
+        .btn-danger:hover {
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #3498db;
+            transition: transform 0.3s ease;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .summary-card h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .summary-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #27ae60;
+        }
+        
+        .table-container {
+            padding: 20px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        th, td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 14px;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #34495e, #2c3e50);
+            color: white;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+        
+        tr:hover {
+            background: #e3f2fd;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
+        }
+        
+        .input-cell {
+            background: #fff3cd;
+        }
+        
+        .calculated-cell {
+            background: #d1ecf1;
+            font-weight: bold;
+        }
+        
+        .total-row {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            font-weight: bold;
+        }
+        
+        .total-row td {
+            border-top: 3px solid #3498db;
+        }
+        
+        input[type="number"] {
+            width: 80px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 5px;
+        }
+        
+        input[type="number"]:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .close {
+            color: #aaa;
+            float: left;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+        
+        .form-row label {
+            min-width: 120px;
+            font-weight: bold;
+        }
+        
+        .form-row input, .form-row select {
+            flex: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .form-row label {
+                min-width: auto;
+            }
+            
+            th, td {
+                padding: 8px 4px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐔 نظام إدارة مزرعة الدواجن 🐔</h1>
+            <p>الخروج من وضع الشاشة الكاملة - متحكمات المزرعة - دورة شهر 1</p>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>اختر المزرعة:</label>
+                <select id="farmSelect">
+                    <option value="">اختر المزرعة...</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>اختر التاجر:</label>
+                <select id="traderSelect">
+                    <option value="">اختر التاجر...</option>
+                </select>
+            </div>
+            <button onclick="openModal('farmModal')">إضافة مزرعة جديدة</button>
+            <button onclick="openModal('traderModal')">إضافة تاجر جديد</button>
+            <button onclick="transferData()" class="btn-primary">ترحيل البيانات</button>
+            <button onclick="clearAll()" class="btn-danger">مسح الكل</button>
+        </div>
+        
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>إجمالي المبيعات</h3>
+                <div class="value" id="totalSales">0</div>
+            </div>
+            <div class="summary-card">
+                <h3>إجمالي المصروفات</h3>
+                <div class="value" id="totalExpenses">0</div>
+            </div>
+            <div class="summary-card">
+                <h3>صافي الربح</h3>
+                <div class="value" id="netProfit">0</div>
+            </div>
+            <div class="summary-card">
+                <h3>عدد الدجاج</h3>
+                <div class="value" id="totalChickens">0</div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table id="mainTable">
+                <thead>
+                    <tr>
+                        <th>م</th>
+                        <th>اسم التاجر</th>
+                        <th>الوزن الصافي</th>
+                        <th>السعر</th>
+                        <th>المبلغ</th>
+                        <th>الفاصل</th>
+                        <th>تحويل</th>
+                        <th>عليه</th>
+                        <th>له</th>
+                        <th>ملاحظات</th>
+                        <th>مكسب / خسارة</th>
+                        <th>إجمال الملاحدات</th>
+                        <th>إجمال المبيعات</th>
+                        <th>إجمال المصروفات</th>
+                        <th>اسم المزرعة</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- سيتم ملء الصفوف ديناميكياً -->
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <td colspan="2"><strong>الإجمالي</strong></td>
+                        <td id="totalWeight">0</td>
+                        <td>-</td>
+                        <td id="totalAmount">0</td>
+                        <td id="totalFasel">0</td>
+                        <td id="totalTransfer">0</td>
+                        <td id="totalCredit">0</td>
+                        <td id="totalDebit">0</td>
+                        <td>-</td>
+                        <td id="totalProfitLoss">0</td>
+                        <td id="grandTotalNotes">0</td>
+                        <td id="grandTotalSales">0</td>
+                        <td id="grandTotalExpenses">0</td>
+                        <td>-</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal لإضافة مزرعة جديدة -->
+    <div id="farmModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('farmModal')">&times;</span>
+            <h2>إضافة مزرعة جديدة</h2>
+            <form id="farmForm">
+                <div class="form-row">
+                    <label>اسم المزرعة:</label>
+                    <input type="text" id="farmName" required>
+                </div>
+                <div class="form-row">
+                    <label>كود المزرعة:</label>
+                    <input type="text" id="farmCode" required>
+                </div>
+                <div class="form-row">
+                    <label>موقع المزرعة:</label>
+                    <input type="text" id="farmLocation">
+                </div>
+                <div class="form-row">
+                    <label>رقم الهاتف:</label>
+                    <input type="text" id="farmPhone">
+                </div>
+                <div class="form-row">
+                    <button type="submit">إضافة المزرعة</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal لإضافة تاجر جديد -->
+    <div id="traderModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('traderModal')">&times;</span>
+            <h2>إضافة تاجر جديد</h2>
+            <form id="traderForm">
+                <div class="form-row">
+                    <label>اسم التاجر:</label>
+                    <input type="text" id="traderName" required>
+                </div>
+                <div class="form-row">
+                    <label>كود التاجر:</label>
+                    <input type="text" id="traderCode" required>
+                </div>
+                <div class="form-row">
+                    <label>رقم الهاتف:</label>
+                    <input type="text" id="traderPhone">
+                </div>
+                <div class="form-row">
+                    <label>العنوان:</label>
+                    <input type="text" id="traderAddress">
+                </div>
+                <div class="form-row">
+                    <button type="submit">إضافة التاجر</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // قواعد البيانات المحلية
+        let farms = JSON.parse(localStorage.getItem('farms')) || [];
+        let traders = JSON.parse(localStorage.getItem('traders')) || [];
+        let tableData = JSON.parse(localStorage.getItem('tableData')) || [];
+        let rowCounter = 1;
+
+        // تحميل البيانات عند بدء التطبيق
+        window.onload = function() {
+            loadFarms();
+            loadTraders();
+            addInitialRows();
+            updateCalculations();
+        };
+
+        // إضافة صفوف أولية
+        function addInitialRows() {
+            if (tableData.length === 0) {
+                // بيانات أولية مماثلة لما في الصورة
+                const initialData = [
+                    {name: 'أحمد حسن', weight: 44.942, price: 89.1, fasel: 0, transfer: 0, credit: 0, debit: 0},
+                    {name: 'حسين', weight: 8.794, price: 89.1, fasel: 0, transfer: 0, credit: 0, debit: 0},
+                    {name: 'أبو علي', weight: 6.593, price: 89.1, fasel: 0, transfer: 0, credit: 0, debit: 0},
+                    {name: 'أحمد جودة', weight: 15.575, price: 89.1, fasel: 0, transfer: 0, credit: 0, debit: 0},
+                    {name: 'المهول', weight: 9.917, price: 89.1, fasel: 0, transfer: 0, credit: 0, debit: 0},
+                    {name: 'سيد طليه', weight: 35.177, price: 89.1, fasel: 0, transfer: 0, credit: 0, debit: 0}
+                ];
+
+                initialData.forEach((data, index) => {
+                    tableData.push({
+                        id: index + 1,
+                        traderName: data.name,
+                        weight: data.weight,
+                        price: data.price,
+                        amount: data.weight * data.price,
+                        fasel: data.fasel,
+                        transfer: data.transfer,
+                        credit: data.credit,
+                        debit: data.debit,
+                        notes: '',
+                        profitLoss: 0,
+                        farmName: ''
+                    });
+                });
+                rowCounter = initialData.length + 1;
+            }
+            renderTable();
+        }
+
+        // تحميل قائمة المزارع
+        function loadFarms() {
+            const farmSelect = document.getElementById('farmSelect');
+            farmSelect.innerHTML = '<option value="">اختر المزرعة...</option>';
+            farms.forEach(farm => {
+                const option = document.createElement('option');
+                option.value = farm.code;
+                option.textContent = `${farm.name} (${farm.code})`;
+                farmSelect.appendChild(option);
+            });
+        }
+
+        // تحميل قائمة التجار
+        function loadTraders() {
+            const traderSelect = document.getElementById('traderSelect');
+            traderSelect.innerHTML = '<option value="">اختر التاجر...</option>';
+            traders.forEach(trader => {
+                const option = document.createElement('option');
+                option.value = trader.code;
+                option.textContent = `${trader.name} (${trader.code})`;
+                traderSelect.appendChild(option);
+            });
+        }
+
+        // عرض الجدول
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            tableData.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.id}</td>
+                    <td><input type="text" value="${row.traderName}" onchange="updateRow(${index}, 'traderName', this.value)"></td>
+                    <td class="input-cell"><input type="number" step="0.001" value="${row.weight}" onchange="updateRow(${index}, 'weight', this.value)"></td>
+                    <td class="input-cell"><input type="number" step="0.1" value="${row.price}" onchange="updateRow(${index}, 'price', this.value)"></td>
+                    <td class="calculated-cell">${(row.weight * row.price).toFixed(2)}</td>
+                    <td class="input-cell"><input type="number" value="${row.fasel}" onchange="updateRow(${index}, 'fasel', this.value)"></td>
+                    <td class="input-cell"><input type="number" value="${row.transfer}" onchange="updateRow(${index}, 'transfer', this.value)"></td>
+                    <td class="input-cell"><input type="number" value="${row.credit}" onchange="updateRow(${index}, 'credit', this.value)"></td>
+                    <td class="input-cell"><input type="number" value="${row.debit}" onchange="updateRow(${index}, 'debit', this.value)"></td>
+                    <td><input type="text" value="${row.notes}" onchange="updateRow(${index}, 'notes', this.value)"></td>
+                    <td class="calculated-cell">${row.profitLoss.toFixed(2)}</td>
+                    <td class="calculated-cell">${(row.weight * row.price + row.fasel + row.transfer).toFixed(2)}</td>
+                    <td class="calculated-cell">${(row.weight * row.price).toFixed(2)}</td>
+                    <td class="calculated-cell">${(row.credit + row.debit).toFixed(2)}</td>
+                    <td><input type="text" value="${row.farmName}" onchange="updateRow(${index}, 'farmName', this.value)"></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateCalculations();
+        }
+
+        // تحديث صف
+        function updateRow(index, field, value) {
+            const numericFields = ['weight', 'price', 'fasel', 'transfer', 'credit', 'debit'];
+            if (numericFields.includes(field)) {
+                value = parseFloat(value) || 0;
+            }
+            
+            tableData[index][field] = value;
+            
+            // حساب المبلغ والربح/الخسارة
+            if (['weight', 'price'].includes(field)) {
+                tableData[index].amount = tableData[index].weight * tableData[index].price;
+            }
+            
+            if (['weight', 'price', 'credit', 'debit'].includes(field)) {
+                tableData[index].profitLoss = (tableData[index].weight * tableData[index].price) - (tableData[index].credit + tableData[index].debit);
+            }
+
+            saveData();
+            renderTable();
+        }
+
+        // إضافة صف جديد
+        function addNewRow() {
+            tableData.push({
+                id: rowCounter++,
+                traderName: '',
+                weight: 0,
+                price: 89.1,
+                amount: 0,
+                fasel: 0,
+                transfer: 0,
+                credit: 0,
+                debit: 0,
+                notes: '',
+                profitLoss: 0,
+                farmName: ''
+            });
+            saveData();
+            renderTable();
+        }
+
+        // تحديث الحسابات
+        function updateCalculations() {
+            const totals = tableData.reduce((acc, row) => {
+                acc.weight += row.weight;
+                acc.amount += row.weight * row.price;
+                acc.fasel += row.fasel;
+                acc.transfer += row.transfer;
+                acc.credit += row.credit;
+                acc.debit += row.debit;
+                acc.profitLoss += (row.weight * row.price) - (row.credit + row.debit);
+                acc.totalNotes += (row.weight * row.price + row.fasel + row.transfer);
+                acc.totalSales += (row.weight * row.price);
+                acc.totalExpenses += (row.credit + row.debit);
+                return acc;
+            }, {
+                weight: 0, amount: 0, fasel: 0, transfer: 0, credit: 0, debit: 0,
+                profitLoss: 0, totalNotes: 0, totalSales: 0, totalExpenses: 0
+            });
+
+            // تحديث الإجماليات في الجدول
+            document.getElementById('totalWeight').textContent = totals.weight.toFixed(3);
+            document.getElementById('totalAmount').textContent = totals.amount.toFixed(2);
+            document.getElementById('totalFasel').textContent = totals.fasel.toFixed(2);
+            document.getElementById('totalTransfer').textContent = totals.transfer.toFixed(2);
+            document.getElementById('totalCredit').textContent = totals.credit.toFixed(2);
+            document.getElementById('totalDebit').textContent = totals.debit.toFixed(2);
+            document.getElementById('totalProfitLoss').textContent = totals.profitLoss.toFixed(2);
+            document.getElementById('grandTotalNotes').textContent = totals.totalNotes.toFixed(2);
+            document.getElementById('grandTotalSales').textContent = totals.totalSales.toFixed(2);
+            document.getElementById('grandTotalExpenses').textContent = totals.totalExpenses.toFixed(2);
+
+            // تحديث البطاقات العلوية
+            document.getElementById('totalSales').textContent = totals.totalSales.toFixed(2);
+            document.getElementById('totalExpenses').textContent = totals.totalExpenses.toFixed(2);
+            document.getElementById('netProfit').textContent = totals.profitLoss.toFixed(2);
+            document.getElementById('totalChickens').textContent = Math.round(totals.weight);
+        }
+
+        // فتح النافذة المنبثقة
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        // إغلاق النافذة المنبثقة
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // إضافة مزرعة جديدة
+        document.getElementById('farmForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const farm = {
+                name: document.getElementById('farmName').value,
+                code: document.getElementById('farmCode').value,
+                location: document.getElementById('farmLocation').value,
+                phone: document.getElementById('farmPhone').value
+            };
+            
+            farms.push(farm);
+            saveFarms();
+            loadFarms();
+            closeModal('farmModal');
+            this.reset();
+            alert('تم إضافة المزرعة بنجاح!');
+        });
+
+        // إضافة تاجر جديد
+        document.getElementById('traderForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const trader = {
+                name: document.getElementById('traderName').value,
+                code: document.getElementById('traderCode').value,
+                phone: document.getElementById('traderPhone').value,
+                address: document.getElementById('traderAddress').value
+            };
+            
+            traders.push(trader);
+            saveTraders();
+            loadTraders();
+            closeModal('traderModal');
+            this.reset();
+            alert('تم إضافة التاجر بنجاح!');
+        });
+
+        // ترحيل البيانات
+        function transferData() {
+            const selectedFarm = document.getElementById('farmSelect').value;
+            const selectedTrader = document.getElementById('traderSelect').value;
+            
+            if (!selectedFarm) {
+                alert('يرجى اختيار المزرعة أولاً');
+                return;
+            }
+
+            // تطبيق المزرعة المختارة على جميع الصفوف
+            const farmName = document.getElementById('farmSelect').options[document.getElementById('farmSelect').selectedIndex].text;
+            tableData.forEach(row => {
+                if (!row.farmName) {
+                    row.farmName = farmName.split(' (')[0]; // استخراج اسم المزرعة فقط
+                }
+            });
+
+            // تطبيق التاجر المختار على الصفوف الفارغة
+            if (selectedTrader) {
+                const traderName = document.getElementById('traderSelect').options[document.getElementById('traderSelect').selectedIndex].text;
+                tableData.forEach(row => {
+                    if (!row.traderName) {
+                        row.traderName = traderName.split(' (')[0]; // استخراج اسم التاجر فقط
+                    }
+                });
+            }
+
+            saveData();
+            renderTable();
+            alert('تم ترحيل البيانات بنجاح!');
+        }
+
+        // مسح جميع البيانات
+        function clearAll() {
+            if (confirm('هل أنت متأكد من مسح جميع البيانات؟')) {
+                tableData = [];
+                rowCounter = 1;
+                addInitialRows();
+                saveData();
+                alert('تم مسح البيانات بنجاح!');
+            }
+        }
+
+        // حفظ البيانات
+        function saveData() {
+            localStorage.setItem('tableData', JSON.stringify(tableData));
+        }
+
+        function saveFarms() {
+            localStorage.setItem('farms', JSON.stringify(farms));
+        }
+
+        function saveTraders() {
+            localStorage.setItem('traders', JSON.stringify(traders));
+        }
+
+        // إضافة صف جديد عند الضغط على مفتاح
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                addNewRow();
+            }
+        });
+
+        // إغلاق النافذة المنبثقة عند النقر خارجها
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        };
+
+        // إضافة صف جديد كل فترة للمحافظة على المرونة
+        setInterval(() => {
+            if (tableData.length < 30) { // حد أقصى 30 صف
+                const lastRow = tableData[tableData.length - 1];
+                if (lastRow && (lastRow.traderName || lastRow.weight > 0)) {
+                    addNewRow();
+                }
+            }
+        }, 2000);
+    </script>
+</body>
+</html>
